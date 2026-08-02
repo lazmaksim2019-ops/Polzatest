@@ -1,0 +1,34 @@
+name: load-data
+
+# Загрузка данных в удалённую Postgres (Neon/Supabase/Vercel Postgres) с раннеров GitHub
+# (US/EU) — не зависит от блокировок DNS на локальной сети. Идемпотентно:
+# schema — CREATE IF NOT EXISTS, companies — ON CONFLICT (id) DO NOTHING,
+# review_import — полная перезапись.
+#
+# Запуск: вручную из вкладки Actions (workflow_dispatch).
+# Требуется secret DATABASE_URL (Settings → Secrets and variables → Actions).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npm run db:load
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npm run db:load-reviews
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

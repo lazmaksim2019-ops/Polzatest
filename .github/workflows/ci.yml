@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install web deps & type check
+        run: cd web && npm ci && npx tsc --noEmit
+
+      - name: Build web
+        run: cd web && npm run build
+
+  schema-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: polza
+          POSTGRES_PASSWORD: polza
+          POSTGRES_DB: polza
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U polza"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://polza:polza@localhost:5432/polza
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apply schema
+        run: npm run db:migrate
+
+      - name: Load companies
+        run: npm run db:load
+
+      - name: Run queries
+        run: psql "$DATABASE_URL" -f db/queries.sql
