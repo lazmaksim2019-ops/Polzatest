@@ -1,0 +1,21 @@
+{
+  "name": "polzatest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polza Agency test task: PostgreSQL + Next.js",
+  "type": "module",
+  "scripts": {
+    "db:migrate": "tsx db/migrate.ts",
+    "db:load": "tsx db/load_companies.ts",
+    "db:load-reviews": "tsx db/load_reviews.ts",
+    "db:neon-provision": "tsx scripts/neon_provision.ts",
+    "db:reset": "tsx db/migrate.ts --reset"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
